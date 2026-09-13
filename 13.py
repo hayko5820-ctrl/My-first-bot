@@ -52,13 +52,13 @@ CREATE TABLE IF NOT EXISTS user_actions (
 ''')
 conn.commit()
 
-# Состояния для ConversationHandler (Админка + Функции бота)
+# Состояния
 (
     ID, DURATION, CONFIRMATION, REMOVE_ID, REMOVE_CONFIRMATION, BROADCAST,
     ACTIVATE_PHONE, REPORT_NICK, REPORT_REASON_STATE, REPORT_LINK, UNBAN_PHONE
 ) = range(11)
 
-# --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ИЗ APP.PY ---
+# Вспомогательные функции
 def generate_random_email():
     domains = ["gmail.com", "hotmail.com"]
     name = ''.join(random.choices(string.ascii_lowercase + string.digits, k=10))
@@ -73,7 +73,7 @@ def generate_user_agent():
     return fake_useragent.UserAgent().random
 
 
-# --- ОСНОВНЫЕ КОМАНДЫ И МЕНЮ ---
+# --- ГЛАВНОЕ МЕНЮ ---
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
@@ -97,16 +97,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if result:
         subscription_end = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S')
         if subscription_end > datetime.now():
-            # Активная подписка -> показываем полный функционал бота
+            # Возвращаем старый вид главного меню
             keyboard = [
-                [InlineKeyboardButton("⚡️ Активация (Спам сессий)", callback_data='menu_activate')],
-                [InlineKeyboardButton("🤖 Жалоба на юзера/пост (ИИ)", callback_data='menu_report')],
-                [InlineKeyboardButton("🔓 Запрос на разбан", callback_data='menu_unban')],
-                [InlineKeyboardButton("🆘 Поддержка", callback_data='support'), InlineKeyboardButton("💰 Прайс", callback_data='price')],
+                [InlineKeyboardButton("▶️ Запустить", callback_data='open_launch_menu')],
+                [InlineKeyboardButton("🆘 Поддержка", callback_data='support')],
+                [InlineKeyboardButton("💰 Прайс", callback_data='price')],
                 [InlineKeyboardButton("🛒 Купить подписку", callback_data='buy_subscription')]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
-            await update.message.reply_text('👋 Добро пожаловать! Выберите нужную функцию:', reply_markup=reply_markup)
+            await update.message.reply_text('👋 Добро пожаловать! Выберите действие:', reply_markup=reply_markup)
         else:
             await send_expired_menu(update)
     else:
@@ -135,7 +134,7 @@ async def check_sub_middleware(update: Update, context: ContextTypes.DEFAULT_TYP
     return False
 
 
-# --- ОБРАБОТЧИКИ КНОПОК И ФУНКЦИЙ ---
+# --- ОБРАБОТЧИК КНОПОК ---
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
@@ -147,15 +146,32 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         await query.edit_message_text(text="💰 Цены на подписку:\n1 день - $2.8\n1 неделя - $7.3\n1 месяц - $13.5\n1 год - $35\nНавсегда - $50")
     elif query.data == 'buy_subscription':
         await query.edit_message_text(text="🛒 Для покупки подписки свяжитесь с @hanori67")
+    elif query.data == 'open_launch_menu':
+        # Меню, которое открывается по кнопке «▶️ Запустить»
+        keyboard = [
+            [InlineKeyboardButton("⚡️ Активация (Спам сессий)", callback_data='menu_activate')],
+            [InlineKeyboardButton("🤖 Жалоба на юзера/пост (ИИ)", callback_data='menu_report')],
+            [InlineKeyboardButton("🔓 Запрос на разбан", callback_data='menu_unban')],
+            [InlineKeyboardButton("« Назад в меню", callback_data='back_to_main')]
+        ]
+        await query.edit_message_text(text="🚀 Выберите нужную функцию:", reply_markup=InlineKeyboardMarkup(keyboard))
+    elif query.data == 'back_to_main':
+        keyboard = [
+            [InlineKeyboardButton("▶️ Запустить", callback_data='open_launch_menu')],
+            [InlineKeyboardButton("🆘 Поддержка", callback_data='support')],
+            [InlineKeyboardButton("💰 Прайс", callback_data='price')],
+            [InlineKeyboardButton("🛒 Купить подписку", callback_data='buy_subscription')]
+        ]
+        await query.edit_message_text(text="👋 Главное меню:", reply_markup=InlineKeyboardMarkup(keyboard))
 
 
-# 1. АКТИВАЦИЯ (Запросы на телефон)
+# 1. АКТИВАЦИЯ
 async def start_activate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     if not await check_sub_middleware(update, context):
         await update.callback_query.message.reply_text("❌ У вас нет активной подписки!")
         return ConversationHandler.END
     
-    keyboard = [[InlineKeyboardButton("« Назад", callback_data='back_to_menu')]]
+    keyboard = [[InlineKeyboardButton("« Назад", callback_data='open_launch_menu')]]
     await update.callback_query.edit_message_text(
         text="📱 Введите номер телефона для отправки запросов (например, +79991234567):",
         reply_markup=InlineKeyboardMarkup(keyboard)
@@ -183,13 +199,13 @@ async def process_activate(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     return ConversationHandler.END
 
 
-# 2. ЖАЛОБА С ИИ И TELETHON
+# 2. ЖАЛОБА
 async def start_report(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     if not await check_sub_middleware(update, context):
         await update.callback_query.message.reply_text("❌ У вас нет активной подписки!")
         return ConversationHandler.END
 
-    keyboard = [[InlineKeyboardButton("« Назад", callback_data='back_to_menu')]]
+    keyboard = [[InlineKeyboardButton("« Назад", callback_data='open_launch_menu')]]
     await update.callback_query.edit_message_text(
         text="📝 Введите никнейм нарушителя (например, @username):",
         reply_markup=InlineKeyboardMarkup(keyboard)
@@ -198,12 +214,12 @@ async def start_report(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
 
 async def report_nick_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data['report_nickname'] = update.message.text
-    await update.message.reply_text("⚠️ Укажите тип нарушения (например: Спам, Мошенничество, Порнография):")
+    await update.message.reply_text("⚠️ Укажите тип нарушения (например: Спам, Мошенничество):")
     return REPORT_REASON_STATE
 
 async def report_reason_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data['report_reason'] = update.message.text
-    await update.message.reply_text("🔗 Теперь отправьте ссылку на сообщение/пост в Telegram (например, https://t.me/channel/123):")
+    await update.message.reply_text("🔗 Отправьте ссылку на сообщение/пост в Telegram (например, https://t.me/channel/123):")
     return REPORT_LINK
 
 async def report_finish_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -211,17 +227,15 @@ async def report_finish_handler(update: Update, context: ContextTypes.DEFAULT_TY
     nickname = context.user_data.get('report_nickname', '@user')
     reason = context.user_data.get('report_reason', 'SPAM')
 
-    await update.message.reply_text("🤖 Генерирую жалобу через ИИ и отправляю репорты с сессий...")
+    await update.message.reply_text("🤖 Генерирую жалобу через ИИ и отправляю репорты...")
 
     try:
-        # Генерация текста через g4f
         client = Client()
-        prompt = f"Дополни и улучши текст: Здравствуйте техническая поддержка телеграмма! Я наткнулся на пользователя с никнеймом: {nickname} он нарушает правило в Telegram: {reason}. Пожалуйста, примите меры и заблокируйте его аккаунт, спасибо."
+        prompt = f"Дополни и улучши текст: Здравствуйте техническая поддержка телеграмма! Я наткнулся на пользователя с никнеймом: {nickname} он нарушает правило в Telegram: {reason}. Пожалуйста, заблокируйте его аккаунт, спасибо."
         ai_resp = client.chat.completions.create(model="gpt-3.5-turbo", messages=[{"role": "user", "content": prompt}])
         message_text = ai_resp.choices[0].message.content
 
-        # Отправка жалоб на support.telegram.org
-        for _ in range(10): # Снижено до 10 для скорости бота
+        for _ in range(10):
             requests.post("https://telegram.org/support?setln=ru", data={
                 "subject": "Жалоба на пользователя",
                 "message": message_text,
@@ -229,7 +243,6 @@ async def report_finish_handler(update: Update, context: ContextTypes.DEFAULT_TY
                 "phone": generate_random_phone_number()
             }, headers={"User-Agent": generate_user_agent()}, verify=certifi.where(), timeout=5)
 
-        # Отправка репортов через Telethon (если есть сессии)
         api_id = '24641445'
         api_hash = 'cbd16f1ca6464bf64338e45abd85ccdf'
         session_files = glob.glob('SESSION/*.session')
@@ -248,9 +261,9 @@ async def report_finish_handler(update: Update, context: ContextTypes.DEFAULT_TY
                     except Exception:
                         pass
 
-        await update.message.reply_text(f"✅ Жалоба успешно отправлена!\n🤖 Текст сгенерирован ИИ\n📱 Telethon сессий отработало: {telethon_count}")
+        await update.message.reply_text(f"✅ Жалоба успешно отправлена!\n🤖 Текст сгенерирован ИИ\n📱 Сессий отработало: {telethon_count}")
     except Exception as e:
-        await update.message.reply_text(f"❌ Произошла ошибка при отправке жалобы: {e}")
+        await update.message.reply_text(f"❌ Произошла ошибка: {e}")
 
     return ConversationHandler.END
 
@@ -261,7 +274,7 @@ async def start_unban(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
         await update.callback_query.message.reply_text("❌ У вас нет активной подписки!")
         return ConversationHandler.END
 
-    keyboard = [[InlineKeyboardButton("« Назад", callback_data='back_to_menu')]]
+    keyboard = [[InlineKeyboardButton("« Назад", callback_data='open_launch_menu')]]
     await update.callback_query.edit_message_text(
         text="🔓 Введите ваш заблокированный номер телефона (например, +79991234567):",
         reply_markup=InlineKeyboardMarkup(keyboard)
@@ -418,12 +431,11 @@ async def back_to_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     return ID
 
 
-# --- ГЛАВНАЯ ФУНКЦИЯ ЗАПУСКА БОТА ---
+# --- ЗАПУСК ---
 
 def main() -> None:
     app = ApplicationBuilder().token(TOKEN).build()
 
-    # ConversationHandler для Админки
     admin_conv = ConversationHandler(
         entry_points=[CommandHandler('admin', admin_panel)],
         states={
@@ -442,7 +454,6 @@ def main() -> None:
         fallbacks=[CommandHandler('admin', admin_panel)]
     )
 
-    # ConversationHandler для функций бота (Активация, Репорт, Разбан)
     bot_actions_conv = ConversationHandler(
         entry_points=[
             CallbackQueryHandler(start_activate, pattern='^menu_activate$'),
@@ -464,7 +475,7 @@ def main() -> None:
     app.add_handler(bot_actions_conv)
     app.add_handler(CallbackQueryHandler(button_handler))
 
-    logger.info("🚀 Бот полностью запущен в режиме единого скрипта!")
+    logger.info("🚀 Бот запущен в классическом стиле с кнопкой Запустить!")
     app.run_polling()
 
 if __name__ == '__main__':
