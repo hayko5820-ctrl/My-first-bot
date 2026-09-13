@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMDSNOS - Система управления</title>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            overflow: hidden; 
+        }
+
+        /* Неоновый логотип с нежным свечением */
+        .logo {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Russo One', sans-serif;
+            font-size: 48px;
+            color: rgba(255,255,255,0.9);
+            text-shadow: 
+                0 0 1px rgba(255,255,255,0.6),
+                0 0 3px rgba(255,255,255,0.4),
+                0 0 5px rgba(15,255,170,0.3),
+                0 0 7px rgba(15,255,170,0.2);
+            animation: softPulse 4s ease-in-out infinite;
+            z-index: 10;
+            letter-spacing: 3px;
+        }
+
+        @keyframes softPulse {
+            0%, 100% {
+                opacity: 0.8;
+                text-shadow: 
+                    0 0 1px rgba(255,255,255,0.6),
+                    0 0 3px rgba(255,255,255,0.4),
+                    0 0 5px rgba(15,255,170,0.3),
+                    0 0 7px rgba(15,255,170,0.2);
+            }
+            50% {
+                opacity: 1;
+                text-shadow: 
+                    0 0 2px rgba(255,255,255,0.8),
+                    0 0 5px rgba(255,255,255,0.6),
+                    0 0 7px rgba(15,255,170,0.5),
+                    0 0 10px rgba(15,255,170,0.3);
+            }
+        }
+
+        /* Анимированный фон с частицами */
+        .background-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            z-index: 0;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Стилизованные табы с эффектом стекла */
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+            margin-top: 100px;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .tab-button {
+            cursor: pointer;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+            color: white;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        .tab-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Стилизованные панели с эффектом стекла */
+        .panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            color: white;
+            transition: transform 0.3s ease;
+        }
+
+        .panel:hover {
+            transform: translateY(-5px);
+        }
+
+        /* Стилизованные поля ввода */
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .input-field::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .input-field:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            outline: none;
+            box-shadow: 0 0 15px rgba(255,255,255,0.1);
+        }
+
+        /* Стилизованные кнопки */
+        .button {
+            background: linear-gradient(45deg, #00ff87, #60efff);
+            color: #1a1a1a;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #00ff87, #00bfff);
+        }
+
+        /* Стилизованные уведомления */
+        .notifications {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .notification {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.5s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .notification img {
+            margin-right: 10px;
+            width: 24px;
+            height: 24px;
+        }
+		/* Дополнительные анимации */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .tab {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .tab.active {
+            display: block;
+        }
+
+        /* Стили для заголовков внутри панелей */
+        .panel h1, .panel h2 {
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .panel h1:after, .panel h2:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(to right, #00ff87, #60efff);
+            border-radius: 3px;
+        }
+
+        /* Добавляем частицы на фон */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: float 15s infinite linear;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            50% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(100vw);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<head>
+    <!-- Остальные теги head -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function() {
+            emailjs.init("obN6hqZtOmLYOOA2k");
+        })();
+    </script>
+</head>
+<body>
+    <div class="background-panel"></div>
+    <div class="particles" id="particles"></div>
+    <div class="logo">TMDSNOS</div>
+
+<div class="tabs">
+    <div class="tab-button" onclick="showTab('spam')">Снести сессии</div>
+    <div class="tab-button" onclick="showTab('complaint')">Веб Жалоба</div>
+    <div class="tab-button" onclick="showTab('unban')">Разбанить аккаунт</div>
+    <div class="tab-button" onclick="showTab('violation')">Ботнет</div>
+    <div class="tab-button" onclick="showTab('anonymous_mail')">Анонимная почта</div>
+</div>
+
+<div id="spam" class="tab">
+    <div class="panel">
+        <h2>Снести сессии обидчику</h2>
+        <input type="text" id="phone_number_spam" class="input-field" placeholder="Введите номер телефона">
+        <button class="button" onclick="processSpam()">Начать атаку</button>
+        <div id="spam-status"></div>
+    </div>
+</div>
+
+<div id="complaint" class="tab">
+    <div class="panel">
+        <h2>Жалоба</h2>
+        <input type="text" id="nickname" class="input-field" placeholder="Никнейм">
+        <input type="text" id="complaint_type" class="input-field" placeholder="Тип жалобы">
+        <button class="button" onclick="processComplaint()">Отправить</button>
+        <div id="complaint-status"></div>
+    </div>
+</div>
+
+<div id="unban" class="tab">
+    <div class="panel">
+        <h2>Разбан</h2>
+        <input type="text" id="phone_number_unban" class="input-field" placeholder="Введите номер телефона">
+        <button class="button" onclick="processUnban()">Разблокировать</button>
+        <div id="unban-status"></div>
+    </div>
+</div>
+
+<div id="violation" class="tab">
+    <div class="panel">
+        <h1>Пожаловаться на нарушение</h1>
+        <input type="text" id="linkInput" class="input-field" placeholder="Введите ссылку на нарушение:" />
+        <button class="button" id="submitButton" onclick="processViolation()">Пожаловаться</button>
+        <div id="violation-status" class="notifications"></div>
+    </div>
+</div>
+
+<div id="anonymous_mail" class="tab">
+    <div class="panel">
+        <h2>Отправка анонимного письма</h2>
+        <input type="text" id="mail_from" class="input-field" placeholder="От кого (email)">
+        <input type="text" id="mail_to" class="input-field" placeholder="Кому (email)">
+        <input type="text" id="mail_subject" class="input-field" placeholder="Тема письма">
+        <textarea id="mail_message" class="input-field" style="height: 150px; resize: vertical;" placeholder="Текст сообщения"></textarea>
+        <button class="button" id="sendMailButton" onclick="processAnonymousMail()">
+            <span class="button-text">Отправить письмо</span>
+            <div class="button-loader" style="display: none;"></div>
+        </button>
+        <div id="mail-status"></div>
+    </div>
+</div>
+
+    <div id="notifications" class="notifications"></div>
+	<script>
+        // Создание анимированных частиц на фоне
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 50;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                // Случайные размеры и позиции для частиц
+                const size = Math.random() * 3 + 1;
+                const startPositionX = Math.random() * window.innerWidth;
+                const startPositionY = Math.random() * window.innerHeight;
+                const duration = Math.random() * 20 + 10;
+                const delay = Math.random() * -20;
+
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${startPositionX}px`;
+                particle.style.top = `${startPositionY}px`;
+                particle.style.animationDuration = `${duration}s`;
+                particle.style.animationDelay = `${delay}s`;
+
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Запускаем создание частиц при загрузке страницы
+        window.addEventListener('load', createParticles);
+
+        function checkCooldown(functionName) {
+            const lastUsed = localStorage.getItem(`${functionName}_lastUsed`);
+            if (lastUsed) {
+                const timeDiff = Date.now() - parseInt(lastUsed);
+                const minutesLeft = Math.ceil((1800000 - timeDiff) / 60000);
+                if (timeDiff < 1800000) {
+                    showNotification(`Подождите ${minutesLeft} минут перед следующим использованием`, "error.png");
+                    return false;
+                }
+            }
+            localStorage.setItem(`${functionName}_lastUsed`, Date.now().toString());
+            return true;
+        }
+
+        function showTab(tabName) {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+
+            // Добавляем анимацию при переключении табов
+            const activeTab = document.getElementById(tabName);
+            activeTab.style.animation = 'none';
+            activeTab.offsetHeight; // Trigger reflow
+            activeTab.style.animation = 'fadeIn 0.5s ease-out';
+        }
+
+        function showNotification(message, icon) {
+            const notificationContainer = document.getElementById('notifications');
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.innerHTML = `<img src="/static/Images/${icon}" alt="icon"> ${message}`;
+
+            notificationContainer.appendChild(notification);
+            
+            // Добавляем небольшую задержку перед показом для плавной анимации
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 10);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notificationContainer.removeChild(notification);
+                }, 500);
+            }, 3000);
+        }
+
+        async function processSpam() {
+    const phoneNumber = document.getElementById('phone_number_spam').value;
+    if (!phoneNumber) {
+        showNotification("Введите номер телефона", "error.png");
+        return;
+    }
+
+    showNotification("Начинаем атаку...", "wait.png");
+
+    async function sendSingleRequest() {
+        try {
+            const response = await fetch('/activate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ phone: phoneNumber })
+            });
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    // Отправляем запросы последовательно с небольшой задержкой
+    for(let i = 0; i < 15; i++) {
+        await sendSingleRequest();
+        await new Promise(resolve => setTimeout(resolve, 200)); // пауза 200мс
+        showNotification(`Отправлено ${i + 1} сообщений`, "wait.png");
+    }
+
+    showNotification("Атака завершена!", "success.png");
+}
+
+        async function processComplaint() {
+            if (!checkCooldown('complaint')) {
+                return;
+            }
+            
+            const nickname = document.getElementById('nickname').value;
+            const complaintType = document.getElementById('complaint_type').value;
+            
+            if (!nickname || !complaintType) {
+                showNotification("Заполните все поля", "error.png");
+                return;
+            }
+
+            try {
+                const response = await fetch('/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams({
+                        nickname: nickname,
+                        complaint_type: complaintType
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    showNotification(`Запросы были успешно отправлены!`, "success.png");
+                } else {
+                    showNotification("Ошибка: " + result.message, "error.png");
+                }
+            } catch (error) {
+                showNotification("Произошла ошибка при отправке запроса", "error.png");
+            }
+        }
+
+        async function processUnban() {
+            if (!checkCooldown('unban')) {
+                return;
+            }
+            
+            const phoneNumber = document.getElementById('phone_number_unban').value;
+            if (!phoneNumber) {
+                showNotification("Введите номер телефона", "error.png");
+                return;
+            }
+
+            try {
+                const response = await fetch('/unban', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phone_number: phoneNumber })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    showNotification(`Запросы были успешно отправлены!`, "success.png");
+                } else {
+                    showNotification("Ошибка: " + result.message, "error.png");
+                }
+            } catch (error) {
+                showNotification("Произошла ошибка при отправке запроса", "error.png");
+            }
+        }
+
+        async function processViolation() {
+            if (!checkCooldown('violation')) {
+                return;
+            }
+            
+            const link = document.getElementById('linkInput').value;
+            if (!link) {
+                showNotification("Введите ссылку", "error.png");
+                return;
+            }
+
+            showNotification("Подключаемся к сессиям...", "wait.png");
+            
+            try {
+                const response = await fetch('/report', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ link: link, reason: 'Spam' })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    showNotification(`Жалобы были успешно отправлены с ${result.count} аккаунтов`, "success.png");
+                } else {
+                    showNotification("Ошибка: " + result.message, "error.png");
+                }
+            } catch (error) {
+                showNotification("Произошла ошибка при отправке запроса", "error.png");
+            }
+        }
+		
+		async function processAnonymousMail() {
+    if (!checkCooldown('anonymous_mail')) {
+        return;
+    }
+
+    const fromEmail = document.getElementById('mail_from').value;
+    const toEmail = document.getElementById('mail_to').value;
+    const subject = document.getElementById('mail_subject').value;
+    const message = document.getElementById('mail_message').value;
+
+    // Проверка заполнения всех полей
+    if (!fromEmail || !toEmail || !subject || !message) {
+        showNotification("Заполните все поля", "error.png");
+        return;
+    }
+
+    // Базовая валидация email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(fromEmail) || !emailRegex.test(toEmail)) {
+        showNotification("Введите корректные email адреса", "error.png");
+        return;
+    }
+
+    showNotification("Отправка письма...", "wait.png");
+
+    try {
+        const templateParams = {
+            from_name: fromEmail,
+            to_email: toEmail,
+            subject: subject,
+            message: message,
+            reply_to: fromEmail
+        };
+
+        const response = await emailjs.send('service_8h8w579', 'template_v95gu5w', templateParams);
+        
+        if (response.status === 200) {
+            showNotification("Письмо успешно отправлено!", "success.png");
+            // Очищаем поля
+            document.getElementById('mail_from').value = '';
+            document.getElementById('mail_to').value = '';
+            document.getElementById('mail_subject').value = '';
+            document.getElementById('mail_message').value = '';
+        } else {
+            showNotification("Ошибка при отправке письма", "error.png");
+        }
+    } catch (error) {
+        console.error("EmailJS Error:", error);
+        showNotification("Произошла ошибка при отправке письма", "error.png");
+    }
+}
+    </script>
+</body>
+</html>
