@@ -4,3 +4,4 @@ requests
 certifi
 fake-useragent
 telethon
+python-telegram-bot
