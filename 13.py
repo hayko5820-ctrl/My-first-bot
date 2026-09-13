@@ -66,7 +66,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         if subscription_end > datetime.now():
             # Если подписка активна, показываем основное меню с веб-приложением
             keyboard = [
-                [InlineKeyboardButton("▶️ Запустить", web_app={"url": "https://e24db9c014a390.lhr.life"})],
+                [InlineKeyboardButton("▶️ Запустить", web_app={"url": "https://my-first-bot-cs28.onrender.com"})],
                 [InlineKeyboardButton("🆘 Поддержка", callback_data='support')],
                 [InlineKeyboardButton("💰 Прайс", callback_data='price')],
                 [InlineKeyboardButton("🛒 Купить подписку", callback_data='buy_subscription')]
